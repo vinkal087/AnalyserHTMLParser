@@ -17,7 +17,7 @@ public class DatabaseUtils {
     final static Logger logger = Logger.getLogger(DatabaseUtils.class);
 
 
-    public static void insertToDB(List<String> queries) throws Exception{
+    public static void insertToDB(List<String> queries, List<String> errors) throws Exception{
         ResourceBundle bundle = ResourceBundle.getBundle("database");
         Statement stmt=null;
         Connection con=null;
@@ -35,7 +35,7 @@ public class DatabaseUtils {
                     stmt.executeUpdate(query);
                 }
                 catch (Exception e){
-
+                    errors.add(e.getMessage());
                 }
             }
             con.commit();

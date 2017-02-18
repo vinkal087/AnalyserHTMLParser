@@ -6,9 +6,7 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
-import java.nio.charset.Charset;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 
@@ -19,6 +17,7 @@ public class HTMLParserDiagnostics {
     final static Logger logger = Logger.getLogger(HTMLParserDiagnostics.class);
     private static ResourceBundle bundle = ResourceBundle.getBundle("parser");
     private static Map<String, String> info = new HashMap<>();
+    private static List<String> dbErrors = new ArrayList<>();
 
     public static boolean parse(String file, String uniqueId, boolean insertToDB) throws Exception{
         List<String> tablesToBeExcluded = new ArrayList<String>();
@@ -48,10 +47,12 @@ public class HTMLParserDiagnostics {
             }
         }
         if(insertToDB)
-            DatabaseUtils.insertToDB(queries);
+            DatabaseUtils.insertToDB(queries,dbErrors);
         else{
-            Path spoolFile = Paths.get(uniqueId+".txt");
-            Files.write(spoolFile, queries, Charset.forName("UTF-8"));
+            ParserUtils.writeDatabaseStatementsToFile(uniqueId,queries);
+        }
+        if(dbErrors.size()>0){
+            ParserUtils.writeErrorDataToFile(dbErrors,uniqueId+"_error.txt");
         }
         ParserUtils.writeParsedDataToFile(info,uniqueId+"_info.txt");
         return true;

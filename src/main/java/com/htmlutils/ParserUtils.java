@@ -8,10 +8,11 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.*;
 
 /**
  * Created by vvishnoi on 2/7/17.
@@ -80,5 +81,34 @@ public class ParserUtils {
             if(writer!=null)writer.close();
             if(bw!=null)bw.close();
         }
+    }
+
+    public static void writeErrorDataToFile(List<String> list, String fileName) throws IOException {
+        FileWriter writer = new FileWriter(new File(fileName));
+        BufferedWriter bw = new BufferedWriter(writer);
+        Iterator<String> itr = list.iterator();
+        try {
+            while ((itr.hasNext())) {
+
+                String value = itr.next()+"\n";
+                bw.write(value);
+            }
+            bw.flush();
+        }
+        finally {
+            if(writer!=null)writer.close();
+            if(bw!=null)bw.close();
+        }
+    }
+
+    public static void writeDatabaseStatementsToFile(String uniqueId, List<String> queries) throws Exception{
+        List<String> modifyQueries = new ArrayList<>();
+        for(int i=0;i<queries.size();i++){
+            String str = queries.get(i);
+            modifyQueries.add(str+";");
+        }
+        Path spoolFile = Paths.get(uniqueId+".txt");
+        Files.write(spoolFile, modifyQueries, Charset.forName("UTF-8"));
+
     }
 }

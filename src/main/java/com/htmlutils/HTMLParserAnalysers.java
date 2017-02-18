@@ -6,9 +6,7 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
-import java.nio.charset.Charset;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 
@@ -24,10 +22,11 @@ public class HTMLParserAnalysers {
 
     private static ResourceBundle bundle = ResourceBundle.getBundle("parser");
     private static Map<String, String> info = new HashMap<>();
+    private static List<String> dbErrors = new ArrayList<>();
 
     public static boolean parse(String file, String uniqueId, boolean insertToDB) throws Exception{
         List<String> tablesToBeExcluded = new ArrayList<String>();
-        String[] tablesToBeExcludedArray = bundle.getString("TABLES_TO_BE_EXCLUDED_FROM_DIAGNOSTICS").split(",");
+        String[] tablesToBeExcludedArray = bundle.getString("TABLES_TO_BE_EXCLUDED_FROM_ANALYSERS").split(",");
         for(int i=0;i<tablesToBeExcludedArray.length;i++) {
             tablesToBeExcluded.add(tablesToBeExcludedArray[i].trim());
         }
@@ -44,10 +43,13 @@ public class HTMLParserAnalysers {
             Element tableNameElement = table.select(".divItemTitle").get(0);
             if(tableNameElement.getElementsByTag("a").size()==0)continue;
             String tableName = tableNameElement.getElementsByTag("a").get(0).attr("name").trim();
-            tableName = tableName.substring(8,tableName.length()-2);
+            tableName = tableName.substring(8,tableName.length()-1);
             if(table.select(".divtable").size()==0 || table.select(".divtable").get(0).getElementsByTag("table").size()==0)continue;
             Element getHtmlTable = table.select(".divtable").get(0).getElementsByTag("table").get(0);
 
+            if(tablesToBeExcluded.contains(tableName)){
+                continue;
+            }
             if(!tableName.contains(" ")) {
                 logger.info("Processing Table "+ tableName);
                 int rowsProcessed = ParserUtils.processTable(getHtmlTable,tableName,queries,uniqueId);
@@ -56,11 +58,13 @@ public class HTMLParserAnalysers {
             }
         }
         if(insertToDB)
-            DatabaseUtils.insertToDB(queries);
+            DatabaseUtils.insertToDB(queries, dbErrors);
         else{
-            Path spoolFile = Paths.get(uniqueId+".txt");
-            Files.write(spoolFile, queries, Charset.forName("UTF-8"));
+            ParserUtils.writeDatabaseStatementsToFile(uniqueId,queries);
 
+        }
+        if(dbErrors.size()>0){
+            ParserUtils.writeErrorDataToFile(dbErrors,uniqueId+"_error.txt");
         }
         ParserUtils.writeParsedDataToFile(info,uniqueId+"_info.txt");
 
