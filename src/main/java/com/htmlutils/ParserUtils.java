@@ -109,7 +109,7 @@ public class ParserUtils {
             String str = queries.get(i);
             modifyQueries.add(str+";");
         }
-        Path spoolFile = Paths.get(uniqueId+".txt");
+        Path spoolFile = Paths.get(uniqueId+".sql");
         Files.write(spoolFile, modifyQueries, Charset.forName("UTF-8"));
 
     }
@@ -127,5 +127,9 @@ public class ParserUtils {
             }
             return s;
         }
+    }
+
+    public static Map<String, String> processId(String tableName, String columnName){
+        return null;
     }
 }

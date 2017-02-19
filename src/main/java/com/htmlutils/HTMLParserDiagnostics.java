@@ -15,13 +15,14 @@ import java.util.*;
  */
 public class HTMLParserDiagnostics {
     final static Logger logger = Logger.getLogger(HTMLParserDiagnostics.class);
-    private static ResourceBundle bundle = ResourceBundle.getBundle("parser");
-    private static Map<String, String> info = new HashMap<>();
+    private static ResourceBundle bundle=null;
+    private static Map<String, String> info = new LinkedHashMap<>();
     private static List<String> dbErrors = new ArrayList<>();
 
-    public static boolean parse(String file, String uniqueId, boolean insertToDB) throws Exception{
+    public static boolean parse(String file, String uniqueId, boolean insertToDB, String propertyFileName) throws Exception{
+        bundle = ResourceBundle.getBundle(propertyFileName);
         List<String> tablesToBeExcluded = new ArrayList<String>();
-        String[] tablesToBeExcludedArray = bundle.getString("TABLES_TO_BE_EXCLUDED_FROM_DIAGNOSTICS").split(",");
+        String[] tablesToBeExcludedArray = bundle.getString("TABLES_TO_BE_EXCLUDED").split(",");
         for(int i=0;i<tablesToBeExcludedArray.length;i++) {
             tablesToBeExcluded.add(tablesToBeExcludedArray[i].trim());
         }

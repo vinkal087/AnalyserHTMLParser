@@ -12,10 +12,21 @@ public class GenerateUI {
 
 	private static final Color FFFF99 = null;
 	private static String fileName =null;
+	private static JTextField userText =null;
+	private static JTextField userText1 = null;
+	private static JRadioButton databaseInsert = null;
+	private static JRadioButton spool = null;
+	private static JRadioButton diagnosticRadioButton = null;
+	private static JRadioButton analysersRadioButton = null;
+	private static JLabel fileNameText = null;
+	private static String[] fileNamesAnalyzer = {"TransactionAnalyzer", "AdjustmentAnalyzer", "ReceiptAnalyzer" };
+	private static String[] fileNamesDiagnostics= {"TransactionDiagnostics", "AdjustmentDiagnostics", "ReceiptDiagnostics"};
+	private static JComboBox dropDown = null;
+	private static JLabel fileProcessingLabel = null;
 	public static void main(String[] args) {
 		final JFrame frame = new JFrame("HTML Parser");
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		frame.setMinimumSize(new Dimension(1050,100));
+		frame.setMinimumSize(new Dimension(1150,100));
 
 		JPanel controlPanel = new JPanel();
 		frame.add(controlPanel);
@@ -24,15 +35,27 @@ public class GenerateUI {
 		layout.setVgap(5);
 		controlPanel.setLayout(layout);
 
+		textPanels(controlPanel);
 
+		radioButtonPanels(controlPanel,frame);
+		browseButton(controlPanel);
+		createDropDown(controlPanel);
+		generateAndCancelButton(controlPanel, frame);
+
+		frame.pack();
+		frame.show();
+
+	}
+
+	private static void textPanels(JPanel controlPanel){
 		Panel text_panel1 = new Panel();
 		Panel text_panel2 = new Panel();
 		JLabel  namelabel= new JLabel("Unique ID", JLabel.RIGHT);
 		namelabel.setPreferredSize(new Dimension(70,30));
 		JLabel  namelabel1= new JLabel("SR", JLabel.RIGHT);
 		namelabel1.setPreferredSize(new Dimension(30,30));
-		final JTextField userText = new JTextField(15);
-		final JTextField userText1 = new JTextField(15);
+		userText = new JTextField(15);
+		userText1 = new JTextField(15);
 		userText.setPreferredSize(new Dimension(70,30));
 		userText1.setPreferredSize(new Dimension(70,30));
 		text_panel1.add(namelabel);
@@ -41,14 +64,15 @@ public class GenerateUI {
 		text_panel2.add(userText1);
 		controlPanel.add(text_panel1);
 		controlPanel.add(text_panel2);
+	}
 
-
+	private static void radioButtonPanels(JPanel controlPanel,JFrame frame ){
 		Panel panel3 = new Panel();
 		//--------------------------------------------------------------------------------------------------------
 		/// Radio Button 1
-		JRadioButton diagnosticRadioButton = new JRadioButton("Diagnostics");
+		diagnosticRadioButton = new JRadioButton("Diagnostics");
 		diagnosticRadioButton.setSelected(true);
-		JRadioButton analysersRadioButton = new JRadioButton("Analyzers");
+		analysersRadioButton = new JRadioButton("Analyzers");
 
 		ButtonGroup group = new ButtonGroup();
 		group.add(diagnosticRadioButton);
@@ -60,8 +84,8 @@ public class GenerateUI {
 
 		// Radio Button 2
 		Panel panel4 = new Panel();
-		JRadioButton databaseInsert = new JRadioButton("Insert To Database");
-		JRadioButton spool = new JRadioButton("Spool");
+		databaseInsert = new JRadioButton("Insert To Database");
+		spool = new JRadioButton("Spool");
 		databaseInsert.setSelected(true);
 		ButtonGroup group1 = new ButtonGroup();
 		group1.add(databaseInsert);
@@ -76,10 +100,41 @@ public class GenerateUI {
 		controlPanel.add(panel3);
 		controlPanel.add(panel4);
 
+		ActionListener radioListener = new ActionListener() {
+			public void actionPerformed(ActionEvent actionEvent) {
+				try {
+					String ac = actionEvent.getActionCommand();
+					if(!ac.equalsIgnoreCase("ANALYZERS")){
+						dropDown.removeAllItems();
+						for(int i=0;i<fileNamesDiagnostics.length;i++){
+							dropDown.addItem(fileNamesDiagnostics[i]);
+						}
+					}
+					else{
+						dropDown.removeAllItems();
+						for(int i=0;i<fileNamesAnalyzer.length;i++){
+							dropDown.addItem(fileNamesAnalyzer[i]);
+						}
+					}
+					frame.update(frame.getGraphics());
+				}
+				catch(Exception e){
+					e.printStackTrace();
+
+				}
+			}
+		};
+		diagnosticRadioButton.setActionCommand("NONANALYZERS");
+		analysersRadioButton.setActionCommand("ANALYZERS");
+		diagnosticRadioButton.addActionListener(radioListener);
+		analysersRadioButton.addActionListener(radioListener);
+	}
+
+	private static void browseButton(JPanel controlPanel){
 		//--------------------------------------------------------------------------------------------------------
 		JPanel panel5 = new JPanel();
 
-		final JLabel fileNameText = new JLabel();
+		fileNameText = new JLabel();
 
 		Button browseButton = new Button("Select File");
 		browseButton.setForeground(new Color(0,0,255));
@@ -91,7 +146,6 @@ public class GenerateUI {
 		panel5.add(fileNameText, BorderLayout.WEST);
 		controlPanel.add(panel5);
 		//controlPanel.add(panel6);
-
 		ActionListener listenerBrowseButton = new ActionListener() {
 			public void actionPerformed(ActionEvent actionEvent) {
 				try {
@@ -113,7 +167,9 @@ public class GenerateUI {
 
 		controlPanel.add(fileNameText);
 		fileNameText.setText(fileName);
+	}
 
+	private static void generateAndCancelButton(JPanel controlPanel,JFrame frame ){
 		JButton generateReportButton = new JButton("Generate Report");
 		JButton cancelButton = new JButton("Cancel");
 		ActionListener cancelListener = new ActionListener() {
@@ -143,15 +199,16 @@ public class GenerateUI {
 					cancelButton.removeActionListener(cancelListener);
 					frame.update(frame.getGraphics());
 					try {
-						boolean success = HTMLParser.parseHTML(fileName.trim(), srString + "-" + uniqueString, insertToDB, analysersRadioButton.isSelected());
+						boolean success = HTMLParser.parseHTML(fileName.trim(), srString + "-" + uniqueString, insertToDB, analysersRadioButton.isSelected(), dropDown.getSelectedItem().toString());
 						if(success){
-							fileNameText.setText("File Sucessfully Processed");
+							fileProcessingLabel.setText("File Sucessfully Processed");
 							//JOptionPane.showMessageDialog(new JFrame(), "File succesfully processed", "SUCESS",
 							//		JOptionPane.INFORMATION_MESSAGE);
 						}
 					}
 					catch(Exception e){
-							JOptionPane.showMessageDialog(new JFrame(), e.getMessage(), "Error",
+						fileProcessingLabel.setText(e.getMessage());
+						JOptionPane.showMessageDialog(new JFrame(), e.getMessage(), "Error",
 								JOptionPane.ERROR_MESSAGE);
 					}
 					cancelButton.setText("Cancel");
@@ -169,8 +226,20 @@ public class GenerateUI {
 		controlPanel.add(generateReportButton, BorderLayout.NORTH);
 
 		controlPanel.add(cancelButton, BorderLayout.SOUTH);
-		frame.pack();
-		frame.show();
+	}
+
+	private static void createDropDown(JPanel controlPanel){
+		JPanel panel = new JPanel();
+		dropDown = new JComboBox();
+		for(int i=0;i< fileNamesDiagnostics.length;i++)
+			dropDown.addItem(fileNamesDiagnostics[i]);
+		panel.add(dropDown);
+		panel.setLayout(new FlowLayout());
+		fileProcessingLabel = new JLabel();
+		panel.add(fileProcessingLabel);
+
+		controlPanel.add(panel);
+		controlPanel.add(fileProcessingLabel);
 
 	}
 
