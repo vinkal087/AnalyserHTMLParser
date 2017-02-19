@@ -17,7 +17,8 @@ public class HTMLParserAnalysers {
     final static Logger logger = Logger.getLogger(HTMLParserAnalysers.class);
 
     public static void main(String[] args) throws Exception{
-        parse("/Users/vvishnoi/Downloads/upwork/Receipt_Analyzer.html", "11-22",false);
+        String s = ParserUtils.parseDate("NavData.Coverage.Garmin.GNS 400/500 Series.United States & Latin America");
+        System.out.println(s);
     }
 
     private static ResourceBundle bundle = ResourceBundle.getBundle("parser");

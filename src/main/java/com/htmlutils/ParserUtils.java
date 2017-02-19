@@ -12,6 +12,8 @@ import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 /**
@@ -51,8 +53,8 @@ public class ParserUtils {
                 for(int j=0;j<tableValues.size();j++){
                     String str = tableValues.get(j).text().trim();
                     str= str.replaceAll("(^\\h*)|(\\h*$)","");
-
-                    query += j==0? "'"+str+"'": ", '"+str+"'";
+                    str = parseDate(str);
+                    query += j==0? str: ", "+str;
                 }
                 query+=", '"+uniqueNumber+"')";
                 queryList.add(query);
@@ -110,5 +112,20 @@ public class ParserUtils {
         Path spoolFile = Paths.get(uniqueId+".txt");
         Files.write(spoolFile, modifyQueries, Charset.forName("UTF-8"));
 
+    }
+
+    public static String parseDate(String s){
+        SimpleDateFormat sdf = new SimpleDateFormat("DD-MMM-YY");
+        try{
+            sdf.parse(s);
+            return "to_date('"+s+"','DD-MM-YY-HH24:MI:SS')";
+        }
+        catch (ParseException e){
+            s= "'"+s+"'";
+            if(s.contains("&")){
+                s= s.replaceAll("&", "' || chr(38) || '");
+            }
+            return s;
+        }
     }
 }

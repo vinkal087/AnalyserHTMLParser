@@ -15,6 +15,7 @@ public class GenerateUI {
 	public static void main(String[] args) {
 		final JFrame frame = new JFrame("HTML Parser");
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		frame.setMinimumSize(new Dimension(1050,100));
 
 		JPanel controlPanel = new JPanel();
 		frame.add(controlPanel);
@@ -79,6 +80,7 @@ public class GenerateUI {
 		JPanel panel5 = new JPanel();
 
 		final JLabel fileNameText = new JLabel();
+
 		Button browseButton = new Button("Select File");
 		browseButton.setForeground(new Color(0,0,255));
 		browseButton.setSize(100, 8);
@@ -113,6 +115,14 @@ public class GenerateUI {
 		fileNameText.setText(fileName);
 
 		JButton generateReportButton = new JButton("Generate Report");
+		JButton cancelButton = new JButton("Cancel");
+		ActionListener cancelListener = new ActionListener() {
+			public void actionPerformed(ActionEvent actionEvent) {
+
+				frame.dispose();
+			}
+		};
+		cancelButton.addActionListener(cancelListener);
 		ActionListener listener = new ActionListener() {
 			public void actionPerformed(ActionEvent actionEvent) {
 				try {
@@ -123,23 +133,30 @@ public class GenerateUI {
 								JOptionPane.ERROR_MESSAGE);
 						return;
 					}
-					if(fileName==null || fileName.trim().equals("")){
+					if(fileName==null || fileName.trim().equals("") || fileNameText.getText().toString().contains("Sucessfully Processed")){
 						JOptionPane.showMessageDialog(new JFrame(), "Please select file", "Error",
 								JOptionPane.ERROR_MESSAGE);
 						return;
 					}
 					boolean insertToDB = databaseInsert.isSelected();
+					cancelButton.setText("Processing...");
+					cancelButton.removeActionListener(cancelListener);
+					frame.update(frame.getGraphics());
 					try {
 						boolean success = HTMLParser.parseHTML(fileName.trim(), srString + "-" + uniqueString, insertToDB, analysersRadioButton.isSelected());
 						if(success){
-							JOptionPane.showMessageDialog(new JFrame(), "File succesfully processed", "SUCESS",
-									JOptionPane.INFORMATION_MESSAGE);
+							fileNameText.setText("File Sucessfully Processed");
+							//JOptionPane.showMessageDialog(new JFrame(), "File succesfully processed", "SUCESS",
+							//		JOptionPane.INFORMATION_MESSAGE);
 						}
 					}
 					catch(Exception e){
-						JOptionPane.showMessageDialog(new JFrame(), e.getMessage(), "Error",
+							JOptionPane.showMessageDialog(new JFrame(), e.getMessage(), "Error",
 								JOptionPane.ERROR_MESSAGE);
 					}
+					cancelButton.setText("Cancel");
+					frame.update(frame.getGraphics());
+					cancelButton.addActionListener(cancelListener);
 				}
 				catch(Exception e){
 					e.printStackTrace();
@@ -150,15 +167,6 @@ public class GenerateUI {
 		generateReportButton.addActionListener(listener);
 
 		controlPanel.add(generateReportButton, BorderLayout.NORTH);
-
-		JButton cancelButton = new JButton("Cancel");
-		listener = new ActionListener() {
-			public void actionPerformed(ActionEvent actionEvent) {
-
-				frame.dispose();
-			}
-		};
-		cancelButton.addActionListener(listener);
 
 		controlPanel.add(cancelButton, BorderLayout.SOUTH);
 		frame.pack();
