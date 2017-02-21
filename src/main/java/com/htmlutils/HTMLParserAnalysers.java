@@ -17,8 +17,9 @@ public class HTMLParserAnalysers {
     final static Logger logger = Logger.getLogger(HTMLParserAnalysers.class);
 
     public static void main(String[] args) throws Exception{
-        String s = ParserUtils.parseDate("NavData.Coverage.Garmin.GNS 400/500 Series.United States & Latin America");
-        System.out.println(s);
+      //  String s = ParserUtils.parseDate("NavData.Coverage.Garmin.GNS 400/500 Series.United States & Latin America");
+       // System.out.println(s);
+        parse("/Users/vvishnoi/Music/Receipt_Analyzer.html","12",false,"ReceiptAnalyzer");
     }
 
     private static ResourceBundle bundle = null;
@@ -37,6 +38,8 @@ public class HTMLParserAnalysers {
         List<String> queries = new ArrayList<String>();
         logger.debug(content);
         Document doc = Jsoup.parse(content);
+        String analyzerType = getTypeOfAnalyzer(doc);
+        logger.info("Analyzer Type:"+ analyzerType);
         Elements tables = doc.select(".divItem");
         logger.info(tables.size());
         for(int i=0;i<tables.size();i++){
@@ -49,6 +52,10 @@ public class HTMLParserAnalysers {
             if(table.select(".divtable").size()==0 || table.select(".divtable").get(0).getElementsByTag("table").size()==0)continue;
             Element getHtmlTable = table.select(".divtable").get(0).getElementsByTag("table").get(0);
 
+            if(tableName.contains(" "))continue;
+            //Process Type Info
+            Element sqlTable = table.select(".table1").first();
+            setTypeId(sqlTable,tableName,analyzerType,info);
             if(tablesToBeExcluded.contains(tableName)){
                 continue;
             }
@@ -71,8 +78,55 @@ public class HTMLParserAnalysers {
         info.put("FILE NAME PROCESSED", file);
         info.put("Unique id", uniqueId);
         ParserUtils.writeParsedDataToFile(info,uniqueId+"_info.txt");
-
+        info.clear();
+        dbErrors.clear();
+        queries.clear();
         return true;
+    }
+
+
+    private static String getTypeOfAnalyzer(Document doc){
+        Elements divTitleBar = doc.select(".TitleBar");
+
+        Elements titles =  divTitleBar.get(0).getElementsByClass("Title1");
+        String type =  titles.get(0).text();
+        if(type.contains("Transaction")) return "Transaction";
+        else if(type.contains("Adjustment")) return "Adjustment";
+        else if(type.contains("Receipt")) return "Receipt";
+        return null;
+    }
+
+    private static void setTypeId( Element table, String tableName, String analyzerType,  Map<String, String> info ){
+        if(!(tableName.equalsIgnoreCase("ra_customer_trx_all") || tableName.equalsIgnoreCase("ar_cash_receipts_all")
+                    || tableName.equalsIgnoreCase("AR_ADJUSTMENTS_ALL")) ){
+            return;
+        }
+        if(analyzerType.equalsIgnoreCase("Transaction") && tableName.equalsIgnoreCase("ra_customer_trx_all")){
+             parseTypeTable(table,tableName, "customer_trx_id", info);
+        }
+        else if(analyzerType.equalsIgnoreCase("Adjustment") && tableName.equalsIgnoreCase("AR_ADJUSTMENTS_ALL")){
+            parseTypeTable(table,tableName, "adjustment_id", info);
+        }
+        else if(analyzerType.equalsIgnoreCase("Receipt") && tableName.equalsIgnoreCase("ar_cash_receipts_all")){
+            parseTypeTable(table,tableName, "cash_receipt_id", info);
+        }
+    }
+
+    private static void parseTypeTable(Element table, String tableName, String columnName, Map<String,String> info){
+        String sqlQuery = columnName+ " =";
+        Elements rows = table.select("tr");
+        for(int i=0;i<rows.size();i++){
+            Elements cols = rows.get(i).select("td");
+            for(int j=0;j<cols.size();j++){
+                if(cols.get(j).select("pre").size()==0)continue;
+                Element pre = cols.get(j).select("pre").get(0);
+                String s = pre.text().toLowerCase();
+                logger.info("Processing Table "+tableName+" and SQL: "+s);
+                s = s.substring(s.indexOf(sqlQuery),s.length());
+                s= s.replaceFirst(sqlQuery, "");
+                info.put(columnName,s.trim());
+            }
+        }
     }
 
 }

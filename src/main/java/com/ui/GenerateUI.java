@@ -155,6 +155,7 @@ public class GenerateUI {
 					//System.out.print(finalSelectedFile.getAbsolutePath());
 					fileName = finalSelectedFile.getAbsolutePath();
 					fileNameText.setText(fileName);
+					fileProcessingLabel.setText("");
 				}
 				catch(Exception e){
 					e.printStackTrace();

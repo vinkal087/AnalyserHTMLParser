@@ -56,6 +56,9 @@ public class HTMLParserDiagnostics {
             ParserUtils.writeErrorDataToFile(dbErrors,uniqueId+"_error.txt");
         }
         ParserUtils.writeParsedDataToFile(info,uniqueId+"_info.txt");
+        info.clear();
+        dbErrors.clear();
+        queries.clear();
         return true;
 
     }

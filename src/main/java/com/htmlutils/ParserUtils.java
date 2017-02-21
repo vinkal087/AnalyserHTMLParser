@@ -21,6 +21,7 @@ import java.util.*;
  */
 public class ParserUtils {
     final static Logger logger = Logger.getLogger(ParserUtils.class);
+    private static ResourceBundle bundle = ResourceBundle.getBundle("general");
 
 
     public  static int processTable(Element table, String tableName, List<String> queryList, String uniqueNumber){
@@ -66,7 +67,7 @@ public class ParserUtils {
     }
 
     public static void writeParsedDataToFile(Map<String, String> map, String fileName) throws IOException {
-        FileWriter writer = new FileWriter(new File(fileName));
+        FileWriter writer = new FileWriter(new File(bundle.getString("FILE_GENERATION_PATH")+"/"+fileName));
         BufferedWriter bw = new BufferedWriter(writer);
         Iterator<String> keys = map.keySet().iterator();
         try {
@@ -86,7 +87,7 @@ public class ParserUtils {
     }
 
     public static void writeErrorDataToFile(List<String> list, String fileName) throws IOException {
-        FileWriter writer = new FileWriter(new File(fileName));
+        FileWriter writer = new FileWriter(new File(bundle.getString("FILE_GENERATION_PATH")+"/"+fileName));
         BufferedWriter bw = new BufferedWriter(writer);
         Iterator<String> itr = list.iterator();
         try {
@@ -109,7 +110,7 @@ public class ParserUtils {
             String str = queries.get(i);
             modifyQueries.add(str+";");
         }
-        Path spoolFile = Paths.get(uniqueId+".sql");
+        Path spoolFile = Paths.get(bundle.getString("FILE_GENERATION_PATH")+"/"+uniqueId+".sql");
         Files.write(spoolFile, modifyQueries, Charset.forName("UTF-8"));
 
     }
