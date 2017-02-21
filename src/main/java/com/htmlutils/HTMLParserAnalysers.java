@@ -27,6 +27,7 @@ public class HTMLParserAnalysers {
     private static List<String> dbErrors = new ArrayList<>();
 
     public static boolean parse(String file, String uniqueId, boolean insertToDB, String propertyFileName) throws Exception{
+        Map<String, String> typeIdMap = new HashMap<>();
         bundle = ResourceBundle.getBundle(propertyFileName);
         List<String> tablesToBeExcluded = new ArrayList<String>();
         String[] tablesToBeExcludedArray = bundle.getString("TABLES_TO_BE_EXCLUDED").split(",");
@@ -55,7 +56,7 @@ public class HTMLParserAnalysers {
             if(tableName.contains(" "))continue;
             //Process Type Info
             Element sqlTable = table.select(".table1").first();
-            setTypeId(sqlTable,tableName,analyzerType,info);
+            setTypeId(sqlTable,tableName,analyzerType,typeIdMap);
             if(tablesToBeExcluded.contains(tableName)){
                 continue;
             }
@@ -75,8 +76,13 @@ public class HTMLParserAnalysers {
         if(dbErrors.size()>0){
             ParserUtils.writeErrorDataToFile(dbErrors,uniqueId+"_error.txt");
         }
+
         info.put("FILE NAME PROCESSED", file);
         info.put("Unique id", uniqueId);
+        if(typeIdMap.size()>0){
+            String tmpKey = typeIdMap.keySet().iterator().next();
+            info.put(tmpKey,typeIdMap.get(tmpKey));
+        }
         ParserUtils.writeParsedDataToFile(info,uniqueId+"_info.txt");
         info.clear();
         dbErrors.clear();

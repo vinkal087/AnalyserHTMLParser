@@ -149,6 +149,8 @@ public class GenerateUI {
 		ActionListener listenerBrowseButton = new ActionListener() {
 			public void actionPerformed(ActionEvent actionEvent) {
 				try {
+					//UIManager.setLookAndFeel("com.sun.java.swing.plaf.windows.WindowsLookAndFeel");
+					UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
 					JFileChooser jfc = new JFileChooser();
 					int returnValue = jfc.showOpenDialog(null);
 					final File finalSelectedFile = jfc.getSelectedFile();
@@ -231,11 +233,15 @@ public class GenerateUI {
 
 	private static void createDropDown(JPanel controlPanel){
 		JPanel panel = new JPanel();
+		JLabel selectPropertyFileLabel = new JLabel();
+		selectPropertyFileLabel.setText("Select property File");
+		panel.add(selectPropertyFileLabel);
 		dropDown = new JComboBox();
 		for(int i=0;i< fileNamesDiagnostics.length;i++)
 			dropDown.addItem(fileNamesDiagnostics[i]);
 		panel.add(dropDown);
 		panel.setLayout(new FlowLayout());
+
 		fileProcessingLabel = new JLabel();
 		panel.add(fileProcessingLabel);
 

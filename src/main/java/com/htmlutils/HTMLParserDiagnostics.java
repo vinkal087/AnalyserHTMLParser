@@ -20,6 +20,7 @@ public class HTMLParserDiagnostics {
     private static List<String> dbErrors = new ArrayList<>();
 
     public static boolean parse(String file, String uniqueId, boolean insertToDB, String propertyFileName) throws Exception{
+        Map<String, String> typeIdMap = new HashMap<>();
         bundle = ResourceBundle.getBundle(propertyFileName);
         List<String> tablesToBeExcluded = new ArrayList<String>();
         String[] tablesToBeExcludedArray = bundle.getString("TABLES_TO_BE_EXCLUDED").split(",");
@@ -40,7 +41,7 @@ public class HTMLParserDiagnostics {
             Element table = tables.get(i);
             String tableName = table.attr("summary").trim();
             if(tableName.contains(" ") || !tableName.contains("_")) continue;
-            setTypeId(table,tableName,diagnosticType,info);
+            setTypeId(table,tableName,diagnosticType,typeIdMap);
             if(tablesToBeExcluded.contains(tableName)){
                 continue;
             }
@@ -60,6 +61,10 @@ public class HTMLParserDiagnostics {
         }
         info.put("FILE NAME PROCESSED", file);
         info.put("Unique id", uniqueId);
+        if(typeIdMap.size()>0){
+            String tmpKey = typeIdMap.keySet().iterator().next();
+            info.put(tmpKey,typeIdMap.get(tmpKey));
+        }
         ParserUtils.writeParsedDataToFile(info,uniqueId+"_info.txt");
         info.clear();
         dbErrors.clear();
