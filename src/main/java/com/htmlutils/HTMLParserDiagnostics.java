@@ -29,6 +29,7 @@ public class HTMLParserDiagnostics {
 
         String uniqueNumber = uniqueId;
         String content = new String(Files.readAllBytes(Paths.get(file)));
+        String diagnosticType = getDiagnosticType(content);
         List<String> queries = new ArrayList<String>();
         logger.debug(content);
         Document doc = Jsoup.parse(content);
@@ -38,6 +39,8 @@ public class HTMLParserDiagnostics {
         for(int i=0;i<tables.size();i++){
             Element table = tables.get(i);
             String tableName = table.attr("summary").trim();
+            if(tableName.contains(" ") || !tableName.contains("_")) continue;
+            setTypeId(table,tableName,diagnosticType,info);
             if(tablesToBeExcluded.contains(tableName)){
                 continue;
             }
@@ -55,11 +58,57 @@ public class HTMLParserDiagnostics {
         if(dbErrors.size()>0){
             ParserUtils.writeErrorDataToFile(dbErrors,uniqueId+"_error.txt");
         }
+        info.put("FILE NAME PROCESSED", file);
+        info.put("Unique id", uniqueId);
         ParserUtils.writeParsedDataToFile(info,uniqueId+"_info.txt");
         info.clear();
         dbErrors.clear();
         queries.clear();
         return true;
 
+    }
+
+    private static String getDiagnosticType(String content){
+        if(content.contains("oracle.apps.ar.diag.ARTransactionInfo")){
+            return "Transaction";
+        }
+        else if(content.contains("oracle.apps.ar.diag.ARReceiptInfo")){
+            return "Receipt";
+        }
+        else if(content.contains("oracle.apps.ar.diag.ARAdjustmentInfo")){
+            return "Adjustment";
+        }
+        return null;
+
+    }
+
+    private static void setTypeId( Element table, String tableName, String diagnosticType,  Map<String, String> info ){
+        if(!(tableName.equalsIgnoreCase("ra_customer_trx_all") || tableName.equalsIgnoreCase("ar_cash_receipts_all")
+                || tableName.equalsIgnoreCase("AR_ADJUSTMENTS_ALL")) ){
+            return;
+        }
+        if(diagnosticType.equalsIgnoreCase("Transaction") && tableName.equalsIgnoreCase("ra_customer_trx_all")){
+            parseTypeTable(table,tableName, "customer_trx_id", info);
+        }
+        else if(diagnosticType.equalsIgnoreCase("Adjustment") && tableName.equalsIgnoreCase("AR_ADJUSTMENTS_ALL")){
+            parseTypeTable(table,tableName, "adjustment_id", info);
+        }
+        else if(diagnosticType.equalsIgnoreCase("Receipt") && tableName.equalsIgnoreCase("ar_cash_receipts_all")){
+            parseTypeTable(table,tableName, "cash_receipt_id", info);
+        }
+    }
+
+    private static void parseTypeTable(Element table, String tableName, String columnName, Map<String,String> info){
+        Elements rows = table.select("tr");
+        for(int i=0;i<rows.size();i++) {
+
+            //Processing Table Header
+            Element row = rows.get(i);
+            Elements tableValues = row.select("td");
+            if(tableValues.size()==0)continue;
+            String str = tableValues.get(0).text().trim();
+            logger.info(columnName + " : "+ str);
+            info.put(columnName,str);
+        }
     }
 }
