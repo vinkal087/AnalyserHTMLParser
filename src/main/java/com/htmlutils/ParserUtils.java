@@ -116,18 +116,29 @@ public class ParserUtils {
     }
 
     public static String parseDate(String s){
-        SimpleDateFormat sdf = new SimpleDateFormat("DD-MMM-YY");
-        try{
-            sdf.parse(s);
-            return "to_date('"+s+"','DD-MM-YY-HH24:MI:SS')";
+
+        String dateFormats[]={"dd-MMM-yy","yyyy-MM-dd"};
+        boolean parseFlag=true;
+
+        for(int i=0;i<dateFormats.length;i++) {
+            try {
+                SimpleDateFormat sdf = new SimpleDateFormat(dateFormats[i]);
+                Date d=sdf.parse(s);
+                parseFlag=true;
+                sdf.applyPattern("dd-MMM-yy");
+                return "to_date('" + sdf.format(d) + "','DD-MM-YY-HH24:MI:SS')";
+            } catch (ParseException e) {
+                parseFlag=false;
+            }
         }
-        catch (ParseException e){
+        if(!parseFlag){
             s= "'"+s+"'";
             if(s.contains("&")){
                 s= s.replaceAll("&", "' || chr(38) || '");
             }
             return s;
         }
+        return "''";
     }
 
     public static Map<String, String> processId(String tableName, String columnName){
