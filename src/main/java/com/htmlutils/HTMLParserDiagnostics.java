@@ -19,6 +19,11 @@ public class HTMLParserDiagnostics {
     private static Map<String, String> info = new LinkedHashMap<>();
     private static List<String> dbErrors = new ArrayList<>();
 
+    public static void main(String[] args) throws Exception{
+        parse("/Users/vvishnoi/Documents/work/projects/AnalyserHTMLParser/sampleHtmlFiles/Diagnostic_receipt_id_1980519.htm",
+                "12",false,"ReceiptDiagnostics");
+    }
+
     public static boolean parse(String file, String uniqueId, boolean insertToDB, String propertyFileName) throws Exception{
         Map<String, String> typeIdMap = new HashMap<>();
         bundle = ResourceBundle.getBundle(propertyFileName);
@@ -40,16 +45,30 @@ public class HTMLParserDiagnostics {
         for(int i=0;i<tables.size();i++){
             Element table = tables.get(i);
             String tableName = table.attr("summary").trim();
-            if(tableName.contains(" ") || !tableName.contains("_")) continue;
+            if(!tableName.contains("_")) continue;
+
+            int tmpIndex = tableName.indexOf(" ");
+            if(tmpIndex!=-1){
+                String tableNameAfterSpace=tableName.substring(tmpIndex+1,tableName.length());
+                tableName=tableName.substring(0,tmpIndex);
+                if(tableNameAfterSpace.contains("Total")){
+                    logger.info("Not Processing Header "+tableName+" "+tableNameAfterSpace);
+                    continue;
+                }
+            }
             setTypeId(table,tableName,diagnosticType,typeIdMap);
             if(tablesToBeExcluded.contains(tableName)){
                 continue;
             }
-            if(!tableName.contains(" ")) {
-                logger.info("Processing Table "+ tableName);
-                int rowsProcessed = ParserUtils.processTable(table, tableName,queries,uniqueNumber);
-                info.put(tableName,""+rowsProcessed);
+
+
+            logger.info("Processing Table "+ tableName);
+            int rowsProcessed = ParserUtils.processTable(table, tableName,queries,uniqueNumber);
+            if(info.containsKey(tableName)){
+                rowsProcessed+= Integer.parseInt(info.get(tableName));
             }
+            info.put(tableName,""+rowsProcessed);
+
         }
         if(insertToDB)
             DatabaseUtils.insertToDB(queries,dbErrors);
@@ -83,7 +102,25 @@ public class HTMLParserDiagnostics {
         else if(content.contains("oracle.apps.ar.diag.ARAdjustmentInfo")){
             return "Adjustment";
         }
-        return null;
+        Document doc = Jsoup.parse(content);
+        Elements spans = doc.select(".section");
+        String summaryHtml="";
+        for(int i=0;i<spans.size();i++){
+            Element tmp=spans.get(i);
+            if(tmp.hasText() && tmp.text().equalsIgnoreCase("Summary")) {
+                Element e = spans.get(i).nextElementSibling().nextElementSibling();
+                summaryHtml=e.html();
+            }
+        }
+        if(summaryHtml.contains("Adjustment Id")){
+            return "Adjustment";
+        }
+        else if(summaryHtml.contains("Cash Receipt Id")){
+            return "Receipt";
+        }
+        else{
+            return "Transaction";
+        }
 
     }
 
