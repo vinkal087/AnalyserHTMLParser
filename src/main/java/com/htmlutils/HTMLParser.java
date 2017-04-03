@@ -9,7 +9,7 @@ import java.io.File;
  * Created by vvishnoi on 2/7/17.
  */
 public class HTMLParser {
-    public static boolean parseHTML(String file, String uniqueId, boolean insertToDB, boolean  parseTypeIsAnalyser, String propertyFileName) throws Exception{
+    public static boolean parseHTML(String file, String uniqueId, boolean insertToDB, String  parseType, String propertyFileName) throws Exception{
 
         if(file.endsWith(".zip")){
             String source = file;
@@ -27,11 +27,15 @@ public class HTMLParser {
                 }
             }
         }
-        if(parseTypeIsAnalyser){
+        if(parseType.equalsIgnoreCase("ANALYZERS")){
             return HTMLParserAnalysers.parse( file,  uniqueId, insertToDB, propertyFileName);
         }
-        else{
+        else if(parseType.equalsIgnoreCase("DIAGNOSTICS")){
             return HTMLParserDiagnostics.parse(file,  uniqueId, insertToDB, propertyFileName);
         }
+        else if(parseType.equalsIgnoreCase("ANALYZERS_NEW_FORMAT")){
+            return HTMLParserAnalyserNewFormat.parse(file,  uniqueId, insertToDB, propertyFileName);
+        }
+        return false;
     }
 }

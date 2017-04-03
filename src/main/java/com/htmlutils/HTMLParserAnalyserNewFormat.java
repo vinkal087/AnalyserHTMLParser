@@ -45,7 +45,7 @@ public class HTMLParserAnalyserNewFormat {
         Document doc = Jsoup.parse(content);
         String analyzerType = getTypeOfAnalyzer(doc);
         logger.info("Analyzer Type:"+ analyzerType);
-        Elements tables = doc.select(".divItem");
+        Elements tables = doc.select(".sigcontainer");
         logger.info(tables.size());
         for(int i=0;i<tables.size();i++){
             Element table = tables.get(i);
@@ -55,12 +55,18 @@ public class HTMLParserAnalyserNewFormat {
             Element anchorDetail = tableNameElement.getElementsByTag("a").get(0);
             if(anchorDetail.getElementsByTag("table").size()==0)continue;
             Element anchorTable=anchorDetail.getElementsByTag("table").get(0);
-            String tableName = anchorTable.getElementsByTag("td").get(0).data();
-            Element getHtmlTable = table.select(".divtable").get(0).getElementsByTag("table").get(0);
+            String tableName = anchorTable.getElementsByTag("td").get(0).text();
+
 
 
 
             if(tableName.contains(" "))continue;
+            Element getHtmlTable=null;
+            //Get HTML Table
+            if(table.select(".divtable").size()>0 && table.select(".divtable").get(0).getElementsByTag("table").size()>0)
+                getHtmlTable= table.select(".divtable").get(0).getElementsByTag("table").get(0);
+            else
+                continue;
             //Process Type Info
             Element sqlTable = table.select(".table1").first();
             setTypeId(sqlTable,tableName,analyzerType,typeIdMap);
