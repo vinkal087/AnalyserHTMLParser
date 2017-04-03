@@ -7,6 +7,7 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
+import java.util.ResourceBundle;
 
 public class GenerateUI {
 
@@ -18,11 +19,12 @@ public class GenerateUI {
 	private static JRadioButton spool = null;
 	private static JRadioButton diagnosticRadioButton = null;
 	private static JRadioButton analysersRadioButton = null;
-	private static JLabel fileNameText = null;
+	private static JTextArea fileNameText = null;
 	private static String[] fileNamesAnalyzer = {"TransactionAnalyzer", "AdjustmentAnalyzer", "ReceiptAnalyzer" };
 	private static String[] fileNamesDiagnostics= {"TransactionDiagnostics", "AdjustmentDiagnostics", "ReceiptDiagnostics"};
 	private static JComboBox dropDown = null;
 	private static JLabel fileProcessingLabel = null;
+	private static ResourceBundle bundle = ResourceBundle.getBundle("general");
 	public static void main(String[] args) {
 		final JFrame frame = new JFrame("HTML Parser");
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -62,8 +64,9 @@ public class GenerateUI {
 		text_panel2.add(namelabel1);
 		text_panel1.add(userText);
 		text_panel2.add(userText1);
-		controlPanel.add(text_panel1);
 		controlPanel.add(text_panel2);
+		controlPanel.add(text_panel1);
+
 	}
 
 	private static void radioButtonPanels(JPanel controlPanel,JFrame frame ){
@@ -134,7 +137,13 @@ public class GenerateUI {
 		//--------------------------------------------------------------------------------------------------------
 		JPanel panel5 = new JPanel();
 
-		fileNameText = new JLabel();
+		fileNameText = new JTextArea();
+		fileNameText.setLineWrap(true);
+		fileNameText.setEditable(false);
+		fileNameText.setOpaque(false);
+
+		//fileNameText.setVisible(true);
+		//fileNameText.setBounds(10,30,300,100);
 
 		Button browseButton = new Button("Select File");
 		browseButton.setForeground(new Color(0,0,255));
@@ -145,13 +154,16 @@ public class GenerateUI {
 		panel5.add(browseButton, BorderLayout.WEST);
 		panel5.add(fileNameText, BorderLayout.WEST);
 		controlPanel.add(panel5);
+
 		//controlPanel.add(panel6);
 		ActionListener listenerBrowseButton = new ActionListener() {
 			public void actionPerformed(ActionEvent actionEvent) {
 				try {
 					//UIManager.setLookAndFeel("com.sun.java.swing.plaf.windows.WindowsLookAndFeel");
 					UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+					File workingDirectory = new File(bundle.getString("BROWSE_FILES_PATH"));
 					JFileChooser jfc = new JFileChooser();
+					jfc.setCurrentDirectory(workingDirectory);
 					int returnValue = jfc.showOpenDialog(null);
 					final File finalSelectedFile = jfc.getSelectedFile();
 					//System.out.print(finalSelectedFile.getAbsolutePath());
@@ -187,7 +199,7 @@ public class GenerateUI {
 				try {
 					String uniqueString = userText.getText().trim();
 					String srString = userText1.getText().trim();
-					if(uniqueString.equals("") || srString.equals("")){
+					if(uniqueString.equals("") && srString.equals("")){
 						JOptionPane.showMessageDialog(new JFrame(), "Please Fill UniqueID and SR", "Error",
 								JOptionPane.ERROR_MESSAGE);
 						return;
@@ -202,7 +214,17 @@ public class GenerateUI {
 					cancelButton.removeActionListener(cancelListener);
 					frame.update(frame.getGraphics());
 					try {
-						boolean success = HTMLParser.parseHTML(fileName.trim(), srString + "-" + uniqueString, insertToDB, analysersRadioButton.isSelected(), dropDown.getSelectedItem().toString());
+						String keyy="";
+						if(srString==null || srString.equalsIgnoreCase("")){
+							keyy=uniqueString;
+						}
+						else if(uniqueString==null || uniqueString.equalsIgnoreCase("")){
+							keyy=srString;
+						}
+						else{
+							keyy=srString + "-" + uniqueString;
+						}
+						boolean success = HTMLParser.parseHTML(fileName.trim(), keyy, insertToDB, analysersRadioButton.isSelected(), dropDown.getSelectedItem().toString());
 						if(success){
 							fileProcessingLabel.setText("File Sucessfully Processed");
 							//JOptionPane.showMessageDialog(new JFrame(), "File succesfully processed", "SUCESS",

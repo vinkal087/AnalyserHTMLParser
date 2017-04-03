@@ -35,7 +35,7 @@ public class DatabaseUtils {
                     stmt.executeUpdate(query);
                 }
                 catch (Exception e){
-                    errors.add(e.getMessage());
+                    errors.add(query + ": " +e.getMessage());
                 }
             }
             con.commit();
